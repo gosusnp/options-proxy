@@ -1,0 +1,22 @@
+{
+  "name": "options-proxy",
+  "description": "Directive to enhance ng-options",
+  "version": "0.0.1",
+  "homepage": "https://github.com/gosusnp/options-proxy",
+  "author": {
+    "name": "snp",
+    "url": "https://github.com/gosusnp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gosusnp/options-proxy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gosusnp/options-proxy/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-karma": "~0.4.3"
+  }
+}
