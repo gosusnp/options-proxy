@@ -1,4 +1,7 @@
+var optionsProxy = (function() {
 'use strict';
+
+var my = {};
 
 /*
  * Parse ngOptions string
@@ -14,14 +17,14 @@ var ngOptionsParser = function(ngOptionString) {
         PIPE_REGEXP = /^\s*([^\s]+)\s*\|/,
         AS_REGEXP = /^\s*(.*)\s+as\s+(.*)$/;
 
-    if (match = NG_OPTIONS_REGEXP.exec(ngOptionString)) {
+    if ((match = NG_OPTIONS_REGEXP.exec(ngOptionString))) {
         var valueName = match[4] || match[6],
             displayName = match[2] || match[1];
         attributeName = displayName.substring(valueName.length+1, displayName.length);
         values = match[7];
-        if (submatch = PIPE_REGEXP.exec(values))
+        if ((submatch = PIPE_REGEXP.exec(values)))
             values = submatch[1];
-        if (submatch = AS_REGEXP.exec(ngOptionString))
+        if ((submatch = AS_REGEXP.exec(ngOptionString)))
             newNgOptionString = displayName+' as '+submatch[2];
         else
             newNgOptionString = displayName+' as '+ngOptionString;
@@ -32,7 +35,8 @@ var ngOptionsParser = function(ngOptionString) {
         values: values,
         ngOptionString: newNgOptionString,
     };
-}
+};
+my.ngOptionsParser = ngOptionsParser;
 
 /*
  * The directive
@@ -82,7 +86,10 @@ angular.module('options-proxy', []).directive('optionsProxy', function() {
                         }
                     });
                 }
-            }
+            };
         }
-    }
+    };
 });
+
+return my;
+})();

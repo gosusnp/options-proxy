@@ -29,7 +29,7 @@ describe("options-proxy", function() {
         expect($rootScope.selectedVar).toEqual({name: 'option1'});
 
         // Update selectedVar
-        $rootScope.selectedVar = {name: 'option2'}
+        $rootScope.selectedVar = {name: 'option2'};
         $rootScope.$apply();
         expect($rootScope.selectedVarProxy).toEqual('option2');
     });
