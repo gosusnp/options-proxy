@@ -114,7 +114,7 @@ angular.module('options-proxy', []).directive('optionsProxy', function() {
                         for (var i in values) {
                             var option = values[i];
                             if (newValue == option[scope.attributeName]) {
-                                if (nestedObjectGet(scope, scope.modelVarName)[scope.attributeName] != option[scope.attributeName]) {
+                                if (nestedObjectGet(scope, scope.modelVarName+' '+scope.attributeName) != option[scope.attributeName]) {
                                     nestedObjectSet(scope, scope.modelVarName, angular.copy(option));
                                 }
                                 break;
