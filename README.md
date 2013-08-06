@@ -18,16 +18,18 @@ directive.
 Example
 -------
 
-    <body ng-app="Demo">
-        <div ng-controller="DemoCtrl">
-            <select options-proxy ng-model="selectedValue" ng-options="opt.name for opt in options"></select>
-            <p ng-bind="selectedValue|json"></p>
-        </div>
-        <script type="text/javascript">
-        app = angular.module('Demo', ['options-proxy']);
-        app.controller('DemoCtrl', function($scope) {
-            $scope.options = [{name: 'option1'}, {name: 'option2'}];
-            $scope.selectedValue = {name: 'option2', extra: 'extra data'};
-        });
-        </script>
-    </body>
+```html
+<body ng-app="Demo">
+    <div ng-controller="DemoCtrl">
+        <select options-proxy ng-model="selectedValue" ng-options="opt.name for opt in options"></select>
+        <p ng-bind="selectedValue|json"></p>
+    </div>
+    <script type="text/javascript">
+    app = angular.module('Demo', ['options-proxy']);
+    app.controller('DemoCtrl', function($scope) {
+        $scope.options = [{name: 'option1'}, {name: 'option2'}];
+        $scope.selectedValue = {name: 'option2', extra: 'extra data'};
+    });
+    </script>
+</body>
+```

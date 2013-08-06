@@ -33,4 +33,25 @@ describe("options-proxy", function() {
         $rootScope.$apply();
         expect($rootScope.selectedVarProxy).toEqual('option2');
     });
+
+    it("should select option2 even though we are manipulating complex objects", function() {
+        // Compile a piece of HTML containing the directive
+        var element = angular.element('<select options-proxy ng-model="selectedVar.selected" ng-options="obj.name for obj in objects"></select>');
+        $rootScope.objects = [{name: 'option1'}, {name: 'option2'}];
+        $rootScope.selectedVar = {selected: {name: 'option2'}};
+        $compile(element)($rootScope);
+        $rootScope.$digest();
+
+        expect($rootScope.selectedVar_selectedProxy).toEqual('option2');
+
+        // Simulate selection of option1
+        $rootScope.selectedVar_selectedProxy = 'option1';
+        $rootScope.$apply();
+        expect($rootScope.selectedVar.selected).toEqual({name: 'option1'});
+
+        // Update selectedVar
+        $rootScope.selectedVar.selected = {name: 'option2'};
+        $rootScope.$apply();
+        expect($rootScope.selectedVar_selectedProxy).toEqual('option2');
+    });
 });

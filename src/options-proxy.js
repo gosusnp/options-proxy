@@ -3,6 +3,42 @@ var optionsProxy = (function() {
 
 var my = {};
 
+var splitKeys = function(key) {
+    // convert indexes to properties and strip a leading dot
+    key = key.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '');
+    return key.split('.');
+};
+var nestedObjectGet = function(obj, key) {
+    var keys = splitKeys(key);
+    while (keys.length) {
+        var k = keys.shift();
+        if (k in obj) {
+            obj = obj[k];
+        } else {
+            return;
+        }
+    }
+    return obj;
+};
+my.nestedObjectGet = nestedObjectGet;
+var nestedObjectSet = function(obj, key, value) {
+    var keys = splitKeys(key);
+    while (keys.length > 1) {
+        var k = keys.shift();
+        if (k in obj) {
+            obj = obj[k];
+        } else {
+            obj[k] = {};
+            obj = obj[k];
+        }
+    }
+    if (keys.length) {
+        obj[keys[0]] = value;
+        return obj[keys[0]];
+    }
+};
+my.nestedObjectSet = nestedObjectSet;
+
 /*
  * Parse ngOptions string
  */
@@ -46,7 +82,7 @@ angular.module('options-proxy', []).directive('optionsProxy', function() {
         compile: function(tElement, tAttrs) {
             // Process attributes
             var modelVarName = tAttrs.ngModel,
-                modelProxyVarName = modelVarName + 'Proxy',
+                modelProxyVarName = (modelVarName + 'Proxy').replace('.', '_'),
                 ngOptionString = tAttrs.ngOptions,
                 attributeName,
                 values;
@@ -70,7 +106,7 @@ angular.module('options-proxy', []).directive('optionsProxy', function() {
                     // Bind on modelVarName to track direct modifications of variable
                     scope.$watch(scope.modelVarName, function(newValue, oldValue) {
                         if (newValue)
-                            scope[scope.modelProxyVarName] = newValue[scope.attributeName];
+                            nestedObjectSet(scope, scope.modelProxyVarName, newValue[scope.attributeName]);
                     });
                     // Bind on modelProxyVarName to forward of the proxy variable
                     scope.$watch(scope.modelProxyVarName, function(newValue, oldValue) {
@@ -78,8 +114,8 @@ angular.module('options-proxy', []).directive('optionsProxy', function() {
                         for (var i in values) {
                             var option = values[i];
                             if (newValue == option[scope.attributeName]) {
-                                if (scope[scope.modelVarName][scope.attributeName] != option[scope.attributeName]) {
-                                    scope[scope.modelVarName] = angular.copy(option);
+                                if (nestedObjectGet(scope, scope.modelVarName)[scope.attributeName] != option[scope.attributeName]) {
+                                    nestedObjectSet(scope, scope.modelVarName, angular.copy(option));
                                 }
                                 break;
                             }
