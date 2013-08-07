@@ -54,4 +54,28 @@ describe("options-proxy", function() {
         $rootScope.$apply();
         expect($rootScope.selectedVar_selectedProxy).toEqual('option2');
     });
+
+    it("ensures optionsProxy works more than once within the same template", function() {
+        var element = angular.element(
+            '<select options-proxy ng-model="var1" ng-options="obj.name for obj in objects"></select>'+
+            '<select options-proxy ng-model="var2" ng-options="obj.name for obj in objects"></select>'
+        );
+        $rootScope.objects = [{name: 'option1'}, {name: 'option2'}];
+        $rootScope.var1 = {name: 'option1'};
+        $rootScope.var2 = {name: 'option2'};
+        $compile(element)($rootScope);
+        $rootScope.$apply();
+        expect($rootScope.var1Proxy).toEqual('option1');
+        expect($rootScope.var2Proxy).toEqual('option2');
+
+        $rootScope.var1Proxy = 'option2';
+        $rootScope.$apply();
+        expect($rootScope.var1Proxy).toEqual('option2');
+        expect($rootScope.var2Proxy).toEqual('option2');
+
+        $rootScope.var2Proxy = 'option1';
+        $rootScope.$apply();
+        expect($rootScope.var1Proxy).toEqual('option2');
+        expect($rootScope.var2Proxy).toEqual('option1');
+    });
 });

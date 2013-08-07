@@ -7,13 +7,24 @@
 <body ng-app="Demo">
     <div ng-controller="DemoCtrl">
         <select options-proxy ng-model="selectedValue" ng-options="opt.name for opt in options"></select>
+        <select options-proxy ng-model="selectedValue2" ng-options="opt.name for opt in options2"></select>
+        <select options-proxy ng-model="selectedValue3" ng-options="opt.name for opt in options2"></select>
+        <select options-proxy ng-model="selectedValue4" ng-options="opt.name for opt in options"></select>
         <p ng-bind="selectedValue|json"></p>
+        <p ng-bind="selectedValue2|json"></p>
+        <p ng-bind="selectedValue3|json"></p>
+        <p ng-bind="selectedValue4|json"></p>
     </div>
 <script type="text/javascript">
 app = angular.module('Demo', ['options-proxy']);
 app.controller('DemoCtrl', function($scope) {
     $scope.options = [{name: 'option1'}, {name: 'option2'}];
-    $scope.selectedValue = {name: 'option2', extra: 'extra data'};
+    $scope.options2 = [{name: 'option3'}, {name: 'option4'}];
+
+    $scope.selectedValue = {name: 'option2', extra: 'extra data for selectedValue'};
+    $scope.selectedValue2 = {name: 'option3', extra: 'extra data for selectedValue2'};
+    $scope.selectedValue3 = {name: 'option4', extra: 'extra data for selectedValue3'};
+    $scope.selectedValue4 = {name: 'option1', extra: 'extra data for selectedValue4'};
 });
 </script>
 </body>

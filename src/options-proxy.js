@@ -96,31 +96,39 @@ angular.module('options-proxy', []).directive('optionsProxy', function() {
 
             return {
                 pre: function(scope) {
-                    // Initializing scope variables
-                    scope.modelVarName = modelVarName;
-                    scope.modelProxyVarName = modelProxyVarName;
-                    scope.attributeName = attributeName;
-                    scope.values = values;
+                    // Initializing context variables
+                    var context = {
+                        modelVarName: modelVarName,
+                        modelProxyVarName: modelProxyVarName,
+                        attributeName: attributeName,
+                        values: values,
+                    };
 
                     // Data binding for proxy
                     // Bind on modelVarName to track direct modifications of variable
-                    scope.$watch(scope.modelVarName, function(newValue, oldValue) {
-                        if (newValue)
-                            nestedObjectSet(scope, scope.modelProxyVarName, newValue[scope.attributeName]);
-                    });
+                    scope.$watch(modelVarName, function(context) {
+                        return function(newValue, oldValue) {
+                            if (newValue)
+                                nestedObjectSet(scope, context.modelProxyVarName, newValue[context.attributeName]);
+                        };
+                    }(context));
                     // Bind on modelProxyVarName to forward of the proxy variable
-                    scope.$watch(scope.modelProxyVarName, function(newValue, oldValue) {
-                        var values = scope[scope.values];
-                        for (var i in values) {
-                            var option = values[i];
-                            if (newValue == option[scope.attributeName]) {
-                                if (nestedObjectGet(scope, scope.modelVarName+' '+scope.attributeName) != option[scope.attributeName]) {
-                                    nestedObjectSet(scope, scope.modelVarName, angular.copy(option));
+                    scope.$watch(modelProxyVarName, function(context) {
+                        return function(newValue, oldValue) {
+                            if (newValue === oldValue)
+                                return;
+                            var values = scope[context.values];
+                            for (var i in values) {
+                                var option = values[i];
+                                if (newValue == option[context.attributeName]) {
+                                    if (nestedObjectGet(scope, context.modelVarName+' '+context.attributeName) != option[context.attributeName]) {
+                                        nestedObjectSet(scope, context.modelVarName, angular.copy(option));
+                                    }
+                                    break;
                                 }
-                                break;
                             }
-                        }
-                    });
+                        };
+                    }(context));
                 }
             };
         }
