@@ -3,55 +3,21 @@ var optionsProxy = (function() {
 
 var my = {};
 
-var splitKeys = function(key) {
-    // convert indexes to properties and strip a leading dot
-    key = key.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '');
-    return key.split('.');
-};
-var nestedObjectGet = function(obj, key) {
-    var keys = splitKeys(key);
-    while (keys.length) {
-        var k = keys.shift();
-        if (k in obj) {
-            obj = obj[k];
-        } else {
-            return;
-        }
-    }
-    return obj;
-};
-my.nestedObjectGet = nestedObjectGet;
-var nestedObjectSet = function(obj, key, value) {
-    var keys = splitKeys(key);
-    while (keys.length > 1) {
-        var k = keys.shift();
-        if (k in obj) {
-            obj = obj[k];
-        } else {
-            obj[k] = {};
-            obj = obj[k];
-        }
-    }
-    if (keys.length) {
-        obj[keys[0]] = value;
-        return obj[keys[0]];
-    }
-};
-my.nestedObjectSet = nestedObjectSet;
-
 /*
  * Parse ngOptions string
  */
+
+// constants from NG_OPTIONS_REGEXP from the select directive implementation of angular.
+var NG_OPTIONS_REGEXP = /^\s*(.*?)(?:\s+as\s+(.*?))?(?:\s+group\s+by\s+(.*))?\s+for\s+(?:([\$\w][\$\w\d]*)|(?:\(\s*([\$\w][\$\w\d]*)\s*,\s*([\$\w][\$\w\d]*)\s*\)))\s+in\s+(.*?)(?:\s+track\s+by\s+(.*?))?$/,
+    PIPE_REGEXP = /^\s*([^\s]+)\s*\|/,
+    AS_REGEXP = /^\s*(.*)\s+as\s+(.*)$/;
+
 var ngOptionsParser = function(ngOptionString) {
     var attributeName,
         values,
         newNgOptionString;
     var match,
         submatch;
-    // NG_OPTIONS_REGEXP from the select directive implementation of angular.
-    var NG_OPTIONS_REGEXP = /^\s*(.*?)(?:\s+as\s+(.*?))?(?:\s+group\s+by\s+(.*))?\s+for\s+(?:([\$\w][\$\w\d]*)|(?:\(\s*([\$\w][\$\w\d]*)\s*,\s*([\$\w][\$\w\d]*)\s*\)))\s+in\s+(.*?)(?:\s+track\s+by\s+(.*?))?$/,
-        PIPE_REGEXP = /^\s*([^\s]+)\s*\|/,
-        AS_REGEXP = /^\s*(.*)\s+as\s+(.*)$/;
 
     if ((match = NG_OPTIONS_REGEXP.exec(ngOptionString))) {
         var valueName = match[4] || match[6],
@@ -77,7 +43,7 @@ my.ngOptionsParser = ngOptionsParser;
 /*
  * The directive
  */
-angular.module('options-proxy', []).directive('optionsProxy', function() {
+angular.module('options-proxy', []).directive('optionsProxy', ['$parse', function($parse) {
     return {
         compile: function(tElement, tAttrs) {
             // Process attributes
@@ -85,10 +51,11 @@ angular.module('options-proxy', []).directive('optionsProxy', function() {
                 modelProxyVarName = (modelVarName + 'Proxy').replace('.', '_'),
                 ngOptionString = tAttrs.ngOptions,
                 attributeName,
-                values;
+                values,
+                parsedOptions;
 
             // Parse ngOptions
-            var parsedOptions = ngOptionsParser(ngOptionString);
+            parsedOptions = ngOptionsParser(ngOptionString);
             attributeName = parsedOptions.attributeName;
             values = parsedOptions.values;
             tAttrs.$set('ngOptions', parsedOptions.ngOptionString);
@@ -98,10 +65,12 @@ angular.module('options-proxy', []).directive('optionsProxy', function() {
                 pre: function(scope) {
                     // Initializing context variables
                     var context = {
-                        modelVarName: modelVarName,
-                        modelProxyVarName: modelProxyVarName,
-                        attributeName: attributeName,
-                        values: values,
+                        // obj.name for obj in objects
+                        attributeAccessor: $parse(attributeName), // 'name'
+                        valuesAccessor: $parse(values),           // 'objects'
+                        proxyAccessor: $parse(modelProxyVarName), // 'obj_nameProxy'
+                        varAccessor: $parse(modelVarName),        // 'obj'
+                        varAttributeAccessor: $parse(modelVarName+'.'+attributeName), // 'obj.name'
                     };
 
                     // Data binding for proxy
@@ -109,20 +78,22 @@ angular.module('options-proxy', []).directive('optionsProxy', function() {
                     scope.$watch(modelVarName, function(context) {
                         return function(newValue, oldValue) {
                             if (newValue)
-                                nestedObjectSet(scope, context.modelProxyVarName, newValue[context.attributeName]);
+                                context.proxyAccessor.assign(scope, context.attributeAccessor(newValue));
                         };
                     }(context));
+
                     // Bind on modelProxyVarName to forward of the proxy variable
                     scope.$watch(modelProxyVarName, function(context) {
                         return function(newValue, oldValue) {
                             if (newValue === oldValue)
                                 return;
-                            var values = scope[context.values];
+                            var values = context.valuesAccessor(scope);
                             for (var i in values) {
-                                var option = values[i];
-                                if (newValue == option[context.attributeName]) {
-                                    if (nestedObjectGet(scope, context.modelVarName+' '+context.attributeName) != option[context.attributeName]) {
-                                        nestedObjectSet(scope, context.modelVarName, angular.copy(option));
+                                var option = values[i],
+                                    attribute = context.attributeAccessor(option);
+                                if (newValue == attribute) {
+                                    if (context.varAttributeAccessor(scope) != attribute) {
+                                        context.varAccessor.assign(scope, angular.copy(option));
                                     }
                                     break;
                                 }
@@ -133,7 +104,7 @@ angular.module('options-proxy', []).directive('optionsProxy', function() {
             };
         }
     };
-});
+}]);
 
 return my;
 })();

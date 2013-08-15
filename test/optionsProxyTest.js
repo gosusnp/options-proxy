@@ -81,7 +81,7 @@ describe("options-proxy", function() {
 
     it("should copy as much of the object as defined", function() {
         var element = angular.element('<select options-proxy ng-model="selected" ng-options="obj.name for obj in objects"></select>');
-        $rootScope.objects = [{name: 'o1', value: 'v1'}, {name: 'o2', value: 'v2'}]
+        $rootScope.objects = [{name: 'o1', value: 'v1'}, {name: 'o2', value: 'v2'}];
 
         $compile(element)($rootScope);
         $rootScope.$digest();
